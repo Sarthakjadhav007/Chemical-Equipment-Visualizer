@@ -1,0 +1,17 @@
+asgiref==3.11.0
+Django==6.0.1
+django-cors-headers==4.9.0
+djangorestframework==3.16.1
+matplotlib==3.10.8
+numpy==2.2.6
+opencv-python==4.12.0.88
+pandas==3.0.0
+pillow==12.1.0
+PyQt5==5.15.11
+reportlab==4.4.9
+requests==2.32.5
+sqlparse==0.5.5
+gunicorn==23.0.0
+whitenoise==6.7.0
+dj-database-url==2.3.0
+psycopg2-binary==2.9.10
