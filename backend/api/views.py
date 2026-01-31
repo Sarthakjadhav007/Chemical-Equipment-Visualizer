@@ -23,15 +23,18 @@ class UploadCSVView(views.APIView):
             # Basic validation
             required_columns = ['Equipment Name', 'Type', 'Flowrate', 'Pressure', 'Temperature']
             if not all(col in df.columns for col in required_columns):
-                return Response({"error": f"Invalid CSV. Required: {required_columns}"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": f"Invalid CSV. Required headers: {required_columns}"}, status=status.HTTP_400_BAD_REQUEST)
             
+            if df.empty:
+                return Response({"error": "The uploaded CSV file is empty."}, status=status.HTTP_400_BAD_REQUEST)
+
             # Create dataset record
             dataset = EquipmentDataset.objects.create(
                 file_name=file.name,
                 total_count=len(df),
-                avg_flowrate=df['Flowrate'].mean(),
-                avg_pressure=df['Pressure'].mean(),
-                avg_temperature=df['Temperature'].mean()
+                avg_flowrate=float(df['Flowrate'].mean()),
+                avg_pressure=float(df['Pressure'].mean()),
+                avg_temperature=float(df['Temperature'].mean())
             )
             
             # Save items
@@ -39,11 +42,11 @@ class UploadCSVView(views.APIView):
             for _, row in df.iterrows():
                 items.append(EquipmentItem(
                     dataset=dataset,
-                    name=row['Equipment Name'],
-                    type=row['Type'],
-                    flowrate=row['Flowrate'],
-                    pressure=row['Pressure'],
-                    temperature=row['Temperature']
+                    name=str(row['Equipment Name']),
+                    type=str(row['Type']),
+                    flowrate=float(row['Flowrate']),
+                    pressure=float(row['Pressure']),
+                    temperature=float(row['Temperature'])
                 ))
             EquipmentItem.objects.bulk_create(items)
             
@@ -53,7 +56,9 @@ class UploadCSVView(views.APIView):
             
             return Response(EquipmentDatasetSerializer(dataset).data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            traceback.print_exc() # Log to terminal
+            return Response({"error": f"Processing error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class DataSummaryView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -68,8 +73,11 @@ class DataSummaryView(views.APIView):
         
         # Calculate type distribution
         items = dataset.items.all()
+        if not items.exists():
+             return Response({"error": "Dataset has no items"}, status=status.HTTP_404_NOT_FOUND)
+
         df = pd.DataFrame(list(items.values('type', 'flowrate', 'pressure', 'temperature')))
-        type_dist = df['type'].value_counts().to_dict()
+        type_dist = df['type'].value_counts().to_dict() if 'type' in df.columns else {}
         
         return Response({
             "id": dataset.id,

@@ -164,10 +164,11 @@ class EquipmentVisualizerApp(QMainWindow):
                     self.fetch_summary()
                     self.fetch_history()
                 elif response.status_code == 401:
-                    QMessageBox.warning(self, "Error", "Authentication failed. Please restart and check credentials.")
+                    QMessageBox.warning(self, "Error", "Authentication failed. Please check credentials.")
                 else:
                     QMessageBox.warning(self, "Error", f"Upload failed: {response.text}")
             except Exception as e:
+                progress.close()
                 QMessageBox.critical(self, "Error", f"Connection error: {str(e)}")
 
     def fetch_summary(self, pk=None):
