@@ -77,8 +77,8 @@ function App() {
     setUploading(true)
     try {
       await axios.post(`${API_BASE}/upload/`, formData, { headers: { ...authHeader, 'Content-Type': 'multipart/form-data' } })
-      fetchSummary()
-      fetchHistory()
+      await fetchSummary()
+      await fetchHistory()
     } catch (err) {
       alert("Upload failed: " + (err.response?.data?.error || err.message))
     } finally {
